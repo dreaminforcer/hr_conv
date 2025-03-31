@@ -46,34 +46,31 @@
         toggleBtn.textContent = "Stop Conversation";
       };
 
-      socket.onmessage = async (event) => {
-        const msg = JSON.parse(event.data);
+socket.onmessage = async (event) => {
+  const msg = JSON.parse(event.data);
+  console.log("Message from agent:", msg);
 
-        if (msg.message) {
-          console.log("Agent:", msg.message);
-        }
+  if (msg.message) {
+    console.log("💬 Agent text:", msg.message);
+  }
 
-        if (msg.audio) {
-          const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0));
-          const source = audioContext.createBufferSource();
-          source.buffer = decoded;
-          source.connect(audioContext.destination);
-          source.start();
-        }
-      };
+  if (msg.audio) {
+    try {
+      const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0));
 
-      socket.onerror = (err) => {
-        console.error("WebSocket error", err);
-        statusEl.textContent = "Error.";
-      };
+      const source = audioContext.createBufferSource();
+      source.buffer = decoded;
+      source.connect(audioContext.destination);
+      source.start();
+      console.log("🔊 Playing audio response.");
+    } catch (e) {
+      console.error("❌ Failed to decode or play audio:", e);
+    }
+  }
+};
 
-      socket.onclose = () => {
-        statusEl.textContent = "Disconnected.";
-        isConnected = false;
-        toggleBtn.textContent = "Start Conversation";
-      };
     }
 
     async function startMicrophone() {
