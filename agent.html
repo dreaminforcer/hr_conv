@@ -75,7 +75,6 @@
 
         // Инициализируем и запускаем сессию
         conversation = await Conversation.startSession(config, callbacks);
-        await conversation.startSession();
         await conversation.startRecording();
         console.log("🎤 Запись началась");
 
