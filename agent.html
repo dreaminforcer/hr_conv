@@ -2,19 +2,88 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ElevenLabs Conversational Agent</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElevenLabs Voice Chat</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f9f9f9;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #333;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
+    .agent-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background-color: #ddd;
+      background-size: cover;
+      background-position: center;
+      margin-bottom: 1rem;
+    }
+
+    p {
+      font-size: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #007AFF;
+      color: white;
+      margin: 0.5rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+
+    button:hover:not(:disabled) {
+      background-color: #005fd1;
+    }
+
+    #controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @media (min-width: 500px) {
+      #controls {
+        flex-direction: row;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div class="agent-avatar" id="agentAvatar" style="background-image: url('agent.jpg');"></div>
   <h1>🎙️ ElevenLabs Voice Chat</h1>
   <p>Status: <span id="status">Not connected</span></p>
-  <button id="startBtn">Start Conversation</button>
-  <button id="stopBtn" disabled>Stop Conversation</button>
+  <div id="controls">
+    <button id="startBtn">Start Conversation</button>
+    <button id="stopBtn" disabled>Stop Conversation</button>
+  </div>
 
   <script type="module">
     import { Conversation } from "https://esm.sh/@11labs/client";
 
     const AGENT_ID = "sKApodJaLWdr6Xo5mslm";
-    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e"; // Необходимо для получения подписанного URL, если требуется
+    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";
 
     let conversation;
     const statusEl = document.getElementById("status");
@@ -45,50 +114,46 @@
       statusEl.textContent = "Connecting...";
 
       try {
-        // Запрашиваем доступ к микрофону
         try {
           await navigator.mediaDevices.getUserMedia({ audio: true });
         } catch (error) {
-          console.error("Ошибка доступа к микрофону:", error);
+          console.error("Microphone access error:", error);
           statusEl.textContent = "Microphone access denied";
           startBtn.disabled = false;
           return;
         }
 
-        // Получаем подписанный URL
         const signedUrl = await getSignedUrl();
 
-        // Инициализируем сессию
         conversation = await Conversation.startSession({
           signedUrl,
           onConnect: (conversationId) => {
-            console.log("✅ Connected with ID:", conversationId);
+            console.log("Connected with ID:", conversationId);
             statusEl.textContent = "Connected";
             stopBtn.disabled = false;
           },
           onDisconnect: () => {
-            console.log("🔌 Disconnected");
+            console.log("Disconnected");
             statusEl.textContent = "Disconnected";
             startBtn.disabled = false;
             stopBtn.disabled = true;
           },
           onMessage: (message, role) => {
-            console.log(`💬 ${role}: ${message}`);
-            // Здесь можно добавить отображение сообщений на странице
+            console.log(`${role}: ${message}`);
           },
           onError: (error) => {
-            console.error("❌ Error:", error);
+            console.error("Error:", error);
             statusEl.textContent = "Error";
           },
           onStatusChange: (status) => {
-            console.log("⚙️ Status changed:", status);
+            console.log("Status:", status);
           },
         });
 
-        console.log("🎤 Conversation started");
+        console.log("Conversation started");
 
       } catch (err) {
-        console.error("Ошибка при запуске разговора:", err);
+        console.error("Conversation error:", err);
         statusEl.textContent = "Failed to start";
         startBtn.disabled = false;
       }
@@ -98,10 +163,10 @@
       if (!conversation) return;
       try {
         await conversation.endSession();
-        console.log("🚪 Session ended");
+        console.log("Session ended");
         statusEl.textContent = "Session ended";
       } catch (err) {
-        console.error("Ошибка при завершении сессии:", err);
+        console.error("End session error:", err);
       }
       stopBtn.disabled = true;
       startBtn.disabled = false;
