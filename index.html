@@ -6,14 +6,28 @@
 </head>
 <body>
   <h1>Чат с голосовым агентом</h1>
-    <h1>Параметры из URL:</h1>
+  <h1>Параметры из URL:</h1>
   <div id="output"></div>
+
   <script>
     // Получаем строку параметров из URL
     const params = new URLSearchParams(window.location.search);
-    const agend_id = params.get("agent_id"); 
+    const agent_id = params.get("agent_id");
+
+    // Показываем параметры на странице
+    document.getElementById("output").innerHTML = `<p>agent_id: ${agent_id}</p>`;
+
+    // Динамически создаём элемент виджета
+    const widget = document.createElement("elevenlabs-convai");
+    widget.setAttribute("agent-id", agent_id);
+    document.body.appendChild(widget);
+
+    // Загружаем скрипт виджета
+    const script = document.createElement("script");
+    script.src = "https://elevenlabs.io/convai-widget/index.js";
+    script.type = "text/javascript";
+    script.async = true;
+    document.body.appendChild(script);
   </script>
-  
-<elevenlabs-convai agent-id=agent_id></elevenlabs-convai><script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 </body>
 </html>
