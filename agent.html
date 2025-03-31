@@ -1,32 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>ElevenLabs Conversational Agent</title>
+  <meta charset="UTF-8" />
+  <title>ElevenLabs Conversational Agent (SDK)</title>
 </head>
 <body>
-  <h1>🎙️ Voice Chat with ElevenLabs Agent</h1>
-  <p>Status: <span id="status">Disconnected</span></p>
-  <button id="toggleBtn">Start Conversation</button>
+  <h1>🎙️ ElevenLabs SDK Voice Chat</h1>
+  <p>Status: <span id="status">Not connected</span></p>
+  <button id="startBtn">Start Conversation</button>
+  <button id="stopBtn" disabled>Stop Conversation</button>
 
-  <script>
-    const AGENT_ID = "sKApodJaLWdr6Xo5mslm"; // ← ВСТАВЬ свой agent_id
-    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";   // ← ВСТАВЬ свой API ключ
+  <script type="module">
+    import { Conversation } from "https://esm.sh/@11labs/client";
 
+    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";
+    const AGENT_ID = "sKApodJaLWdr6Xo5mslm";
+
+    let conversation;
     const statusEl = document.getElementById("status");
-    const toggleBtn = document.getElementById("toggleBtn");
+    const startBtn = document.getElementById("startBtn");
+    const stopBtn = document.getElementById("stopBtn");
 
-    let socket;
-    let mediaRecorder;
-    let isRecording = false;
-    let isConnected = false;
+    startBtn.addEventListener("click", async () => {
+      startBtn.disabled = true;
+      statusEl.textContent = "Connecting...";
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-
-    async function getSignedUrl() {
-      console.log("[Step 1] Запрашиваем signed URL...");
       try {
-        const res = await fetch(
+        const signedUrlRes = await fetch(
           `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${AGENT_ID}`,
           {
             method: "GET",
@@ -36,165 +36,70 @@
           }
         );
 
-        if (!res.ok) {
-          console.error("❌ Не удалось получить signed URL:", res.status, await res.text());
-          return;
-        }
+        const { signed_url } = await signedUrlRes.json();
+        console.log("Signed URL:", signed_url);
 
-        const data = await res.json();
-        console.log("[Step 1] ✅ Signed URL получен:", data.signed_url);
-        return data.signed_url;
+        const config = {
+          agentId: AGENT_ID,
+          signedUrl: signed_url,
+          dynamicVariables: {
+            customer_name: { type: "string", value: "John Doe" },
+            account_balance: { type: "number", value: 4200.75 },
+            is_premium: { type: "boolean", value: true }
+          }
+        };
+
+        const callbacks = {
+          onConnect: (conversationId) => {
+            console.log("✅ Connected to conversation:", conversationId);
+            statusEl.textContent = "Connected";
+            stopBtn.disabled = false;
+          },
+          onDisconnect: () => {
+            console.log("🔌 Disconnected");
+            statusEl.textContent = "Disconnected";
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+          },
+          onMessage: (message, role) => {
+            console.log(`💬 ${role}: ${message}`);
+          },
+          onError: (error, info) => {
+            console.error("❌ Error:", error, info);
+            statusEl.textContent = "Error";
+          },
+          onStatusChange: (status) => {
+            console.log("⚙️ Status changed:", status);
+          }
+        };
+
+        // Инициализируем и запускаем сессию
+        conversation = await Conversation.startSession(config, callbacks);
+        await conversation.startSession();
+        await conversation.startRecording();
+        console.log("🎤 Запись началась");
+
       } catch (err) {
-        console.error("❌ Ошибка при получении signed URL:", err);
+        console.error("Ошибка при запуске разговора:", err);
+        statusEl.textContent = "Failed to start";
+        startBtn.disabled = false;
       }
-    }
+    });
 
-    async function connectToAgent() {
-      const signedUrl = await getSignedUrl();
-      if (!signedUrl) {
-        statusEl.textContent = "Ошибка при получении signed URL";
-        return;
-      }
-
-      console.log("[Step 2] Подключаемся к WebSocket...");
-      socket = new WebSocket(signedUrl);
-
-      socket.onopen = () => {
-        console.log("[Step 2] ✅ WebSocket соединение открыто.");
-        statusEl.textContent = "Connected. Listening...";
-        isConnected = true;
-        toggleBtn.textContent = "Stop Conversation";
-        startMicrophone();
-      };
-
-      socket.onmessage = async (event) => {
-        console.log("[Step 3] 📩 Получено сообщение от агента:", event.data);
-        const msg = JSON.parse(event.data);
-
-        if (msg.message) {
-          console.log("💬 Текст от агента:", msg.message);
-        }
-
-        if (msg.audio) {
-          console.log("🔉 Получен raw PCM audio. Пробуем воспроизвести...");
-
-          try {
-            if (audioContext.state === "suspended") {
-              await audioContext.resume();
-              console.log("🎚️ AudioContext активирован.");
-            }
-
-            const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
-            const pcmData = new DataView(audioBuffer);
-            const samples = new Float32Array(audioBuffer.byteLength / 2);
-
-            for (let i = 0; i < samples.length; i++) {
-              const s = pcmData.getInt16(i * 2, true);
-              samples[i] = s / 32768;
-            }
-
-            const audioBufferObj = audioContext.createBuffer(1, samples.length, 16000);
-            audioBufferObj.getChannelData(0).set(samples);
-
-            const source = audioContext.createBufferSource();
-            source.buffer = audioBufferObj;
-            source.connect(audioContext.destination);
-            source.start();
-
-            console.log("✅ PCM воспроизведено 🎧");
-          } catch (e) {
-            console.error("❌ Ошибка при воспроизведении аудио:", e);
-          }
-        }
-      };
-
-      socket.onerror = (err) => {
-        console.error("❌ WebSocket ошибка:", err);
-        statusEl.textContent = "WebSocket error.";
-      };
-
-      socket.onclose = () => {
-        console.warn("⚠️ WebSocket соединение закрыто.");
-        statusEl.textContent = "Disconnected.";
-        isConnected = false;
-        toggleBtn.textContent = "Start Conversation";
-      };
-    }
-
-    async function startMicrophone() {
-      console.log("[Step 4] Запрашиваем доступ к микрофону...");
+    stopBtn.addEventListener("click", async () => {
+      if (!conversation) return;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("✅ Микрофон доступен.");
-
-        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
-        let audioChunks = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-          console.log("🎤 Получен аудио фрагмент.");
-          audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = async () => {
-          console.log("⏹️ Остановка записи, отправляем аудио агенту...");
-
-          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-          audioChunks = [];
-
-          const arrayBuffer = await audioBlob.arrayBuffer();
-          const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-          if (socket && socket.readyState === WebSocket.OPEN) {
-            console.log("📤 Отправка аудио агенту...");
-            socket.send(JSON.stringify({ audio: base64Audio }));
-          } else {
-            console.warn("⚠️ Невозможно отправить аудио: WebSocket закрыт.");
-          }
-
-          if (isRecording) {
-            console.log("🔁 Продолжаем запись...");
-            mediaRecorder.start();
-            setTimeout(() => mediaRecorder.stop(), 2000);
-          }
-        };
-
-        isRecording = true;
-        console.log("▶️ Запускаем первую запись...");
-        mediaRecorder.start();
-        setTimeout(() => mediaRecorder.stop(), 2000);
-      } catch (e) {
-        console.error("❌ Ошибка доступа к микрофону:", e);
-        statusEl.textContent = "Microphone error.";
+        await conversation.stopRecording();
+        console.log("🛑 Запись остановлена");
+        await conversation.endSession();
+        console.log("🚪 Сессия завершена");
+        conversation = null;
+        statusEl.textContent = "Session ended";
+      } catch (err) {
+        console.error("Ошибка при остановке разговора:", err);
       }
-    }
-
-    function stopConversation() {
-      console.log("[Step 5] Остановка разговора...");
-      isRecording = false;
-
-      if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        console.log("⏹️ Останавливаем запись.");
-        mediaRecorder.stop();
-      }
-
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        console.log("❌ Закрываем WebSocket...");
-        socket.close();
-      }
-
-      statusEl.textContent = "Disconnected.";
-      toggleBtn.textContent = "Start Conversation";
-      isConnected = false;
-    }
-
-    toggleBtn.addEventListener("click", () => {
-      if (!isConnected) {
-        console.log("🔄 Кнопка: Начать разговор");
-        connectToAgent();
-      } else {
-        console.log("🔄 Кнопка: Остановить разговор");
-        stopConversation();
-      }
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
     });
   </script>
 </body>
