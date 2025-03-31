@@ -5,10 +5,6 @@
   <title>ElevenLabs Convai Widget</title>
 </head>
 <body>
-  <h1>Чат с голосовым агентом</h1>
-  <h2>Параметры из URL:</h2>
-  <div id="output"></div>
-
   <!-- Плейсхолдер для виджета -->
   <elevenlabs-convai id="my-widget"></elevenlabs-convai>
 
@@ -17,9 +13,6 @@
     // Получаем параметры из URL
     const params = new URLSearchParams(window.location.search);
     const agent_id = params.get("agent_id");
-
-    // Показываем agent_id на странице
-    document.getElementById("output").innerHTML = `<p>agent_id: ${agent_id}</p>`;
 
     // Подставляем agent_id в виджет
     const widget = document.getElementById("my-widget");
