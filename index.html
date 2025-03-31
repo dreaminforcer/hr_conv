@@ -6,6 +6,22 @@
 </head>
 <body>
   <h1>Чат с голосовым агентом</h1>
+    <script>
+    // Получаем строку параметров из URL
+    const params = new URLSearchParams(window.location.search);
+
+    // Пример: получить конкретный параметр по имени
+    const agend_id = params.get("agent_id"); 
+
+    // Показать все параметры
+    let output = "";
+    for (const [key, value] of params.entries()) {
+      output += `<p>${key}: ${value}</p>`;
+    }
+
+    // Выводим на страницу
+    document.getElementById("output").innerHTML = output;
+  </script>
   <elevenlabs-convai agent-id="feFSsKFzMdES5eb2lZjy"></elevenlabs-convai><script src="https://elevenlabs.io/convai-widget/index.js" async type="text/javascript"></script>
 </body>
 </html>
