@@ -92,9 +92,9 @@
 </head>
 <body>
   <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
-  <h1>🧾 Insert a link to a structured google spreadsheet</h1>
-  <input type="text" id="sheetUrl" placeholder="Вставь ссылку на Google Sheet" />
-  <button onclick="sendToWebhook()">Отправить</button>
+  <h1>🧾 Let's create a new survey VHR!</h1>
+  <input type="text" id="sheetUrl" placeholder="Insert a link to a Google Sheet" />
+  <button onclick="sendToWebhook()">Send</button>
   <div id="result"></div>
   <img src="../logo.svg" alt="Logo" class="logo" />
 
@@ -104,7 +104,7 @@
       const resultDiv = document.getElementById("result");
 
       if (!sheetUrl) {
-        resultDiv.innerText = "❗ Введите ссылку.";
+        resultDiv.innerText = "❗ Enter a link.";
         return;
       }
 
@@ -124,7 +124,7 @@
         resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">${resultUrl}</a>`;
       } catch (error) {
         console.error(error);
-        resultDiv.innerText = "🚫 Ошибка при отправке запроса.";
+        resultDiv.innerText = "🚫 Error processing request.";
       }
     }
   </script>
