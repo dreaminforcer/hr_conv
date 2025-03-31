@@ -3,18 +3,38 @@
 <head>
   <meta charset="UTF-8">
   <title>ElevenLabs Convai Widget</title>
+  <style>
+    html, body {
+      margin: 0;
+      height: 100%;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background-color: #f9f9f9;
+    }
+
+    #widget-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
 </head>
 <body>
-  <!-- Плейсхолдер для виджета -->
-  <elevenlabs-convai id="my-widget"></elevenlabs-convai>
+  <!-- Контейнер для виджета -->
+  <div id="widget-container">
+    <elevenlabs-convai id="my-widget"></elevenlabs-convai>
+  </div>
 
   <!-- Скрипт: подставляем agent_id и подключаем виджет -->
   <script>
-    // Получаем параметры из URL
     const params = new URLSearchParams(window.location.search);
     const agent_id = params.get("agent_id");
 
-    // Подставляем agent_id в виджет
     const widget = document.getElementById("my-widget");
     if (agent_id && widget) {
       widget.setAttribute("agent-id", agent_id);
@@ -22,7 +42,6 @@
       console.warn("agent_id не указан в URL или не найден элемент виджета");
     }
 
-    // Загружаем внешний скрипт виджета
     const script = document.createElement("script");
     script.src = "https://elevenlabs.io/convai-widget/index.js";
     script.type = "text/javascript";
