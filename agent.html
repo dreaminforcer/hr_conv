@@ -21,6 +21,8 @@
     let isRecording = false;
     let isConnected = false;
 
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
     async function getSignedUrl() {
       console.log("[Step 1] Запрашиваем signed URL...");
       try {
@@ -65,37 +67,46 @@
         startMicrophone();
       };
 
-if (msg.audio) {
-  console.log("🔉 Получен raw PCM audio. Пробуем воспроизвести...");
+      socket.onmessage = async (event) => {
+        console.log("[Step 3] 📩 Получено сообщение от агента:", event.data);
+        const msg = JSON.parse(event.data);
 
-  try {
-    const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
+        if (msg.message) {
+          console.log("💬 Текст от агента:", msg.message);
+        }
 
-    const pcmData = new DataView(audioBuffer);
-    const samples = new Float32Array(audioBuffer.byteLength / 2);
+        if (msg.audio) {
+          console.log("🔉 Получен raw PCM audio. Пробуем воспроизвести...");
 
-    // Преобразуем 16-bit PCM -> Float32
-    for (let i = 0; i < samples.length; i++) {
-      const s = pcmData.getInt16(i * 2, true); // Little endian
-      samples[i] = s / 32768;
-    }
+          try {
+            if (audioContext.state === "suspended") {
+              await audioContext.resume();
+              console.log("🎚️ AudioContext активирован.");
+            }
 
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const sampleRate = 16000; // как в metadata
-    const audioBufferObj = audioContext.createBuffer(1, samples.length, sampleRate);
-    audioBufferObj.getChannelData(0).set(samples);
+            const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
+            const pcmData = new DataView(audioBuffer);
+            const samples = new Float32Array(audioBuffer.byteLength / 2);
 
-    const source = audioContext.createBufferSource();
-    source.buffer = audioBufferObj;
-    source.connect(audioContext.destination);
-    source.start();
+            for (let i = 0; i < samples.length; i++) {
+              const s = pcmData.getInt16(i * 2, true);
+              samples[i] = s / 32768;
+            }
 
-    console.log("✅ PCM декодировано и воспроизведено.");
-  } catch (e) {
-    console.error("❌ Ошибка при декодировании raw PCM:", e);
-  }
-};
+            const audioBufferObj = audioContext.createBuffer(1, samples.length, 16000);
+            audioBufferObj.getChannelData(0).set(samples);
 
+            const source = audioContext.createBufferSource();
+            source.buffer = audioBufferObj;
+            source.connect(audioContext.destination);
+            source.start();
+
+            console.log("✅ PCM воспроизведено 🎧");
+          } catch (e) {
+            console.error("❌ Ошибка при воспроизведении аудио:", e);
+          }
+        }
+      };
 
       socket.onerror = (err) => {
         console.error("❌ WebSocket ошибка:", err);
