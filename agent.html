@@ -65,36 +65,37 @@
         startMicrophone();
       };
 
-      socket.onmessage = async (event) => {
-        console.log("[Step 3] 📩 Получено сообщение от агента:", event.data);
-        const msg = JSON.parse(event.data);
+if (msg.audio) {
+  console.log("🔉 Получен raw PCM audio. Пробуем воспроизвести...");
 
-        if (msg.message) {
-          console.log("💬 Текст от агента:", msg.message);
-        }
+  try {
+    const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
 
-        if (msg.audio) {
-          console.log("🔉 Получено аудио. Пробуем воспроизвести...");
+    const pcmData = new DataView(audioBuffer);
+    const samples = new Float32Array(audioBuffer.byteLength / 2);
 
-          try {
-            const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    // Преобразуем 16-bit PCM -> Float32
+    for (let i = 0; i < samples.length; i++) {
+      const s = pcmData.getInt16(i * 2, true); // Little endian
+      samples[i] = s / 32768;
+    }
 
-            audioContext.decodeAudioData(audioBuffer.slice(0), (decoded) => {
-              console.log("✅ Аудио успешно декодировано.");
-              const source = audioContext.createBufferSource();
-              source.buffer = decoded;
-              source.connect(audioContext.destination);
-              source.start();
-              console.log("🔊 Аудио воспроизведено.");
-            }, (error) => {
-              console.error("❌ Ошибка при декодировании аудио:", error);
-            });
-          } catch (e) {
-            console.error("❌ Исключение при обработке аудио:", e);
-          }
-        }
-      };
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const sampleRate = 16000; // как в metadata
+    const audioBufferObj = audioContext.createBuffer(1, samples.length, sampleRate);
+    audioBufferObj.getChannelData(0).set(samples);
+
+    const source = audioContext.createBufferSource();
+    source.buffer = audioBufferObj;
+    source.connect(audioContext.destination);
+    source.start();
+
+    console.log("✅ PCM декодировано и воспроизведено.");
+  } catch (e) {
+    console.error("❌ Ошибка при декодировании raw PCM:", e);
+  }
+};
+
 
       socket.onerror = (err) => {
         console.error("❌ WebSocket ошибка:", err);
