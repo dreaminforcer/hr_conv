@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Sheet → Webhook</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 100px auto;
+      text-align: center;
+    }
+    input, button {
+      padding: 10px;
+      width: 80%;
+      margin: 10px 0;
+      font-size: 16px;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>Ссылка на Google Spreadsheet</h1>
+  <input type="text" id="sheetUrl" placeholder="Вставь ссылку на Google Sheet" />
+  <br />
+  <button onclick="sendToWebhook()">Отправить</button>
+  <div id="result"></div>
+
+  <script>
+    async function sendToWebhook() {
+      const sheetUrl = document.getElementById("sheetUrl").value.trim();
+      const resultDiv = document.getElementById("result");
+
+      if (!sheetUrl) {
+        resultDiv.innerText = "❗ Введите ссылку.";
+        return;
+      }
+
+      const encodedUrl = encodeURIComponent(sheetUrl);
+      const webhookUrl = `https://example.com/webhook?survey_url=${encodedUrl}`; // ЗАМЕНИ на свой URL
+
+      try {
+        const response = await fetch(webhookUrl, { method: "GET" });
+
+        if (!response.ok) {
+          throw new Error("Ошибка ответа от вебхука");
+        }
+
+        const resultUrl = await response.text();
+
+        resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">${resultUrl}</a>`;
+      } catch (error) {
+        console.error(error);
+        resultDiv.innerText = "🚫 Ошибка при отправке запроса.";
+      }
+    }
+  </script>
+</body>
+</html>
