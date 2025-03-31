@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" sizes="any">
   <title>Oxagile VHR</title>
   <style>
     body {
@@ -20,6 +20,7 @@
     h1 {
       font-size: 1.8rem;
       margin-bottom: 1rem;
+      text-align: center;
     }
 
     .agent-avatar {
@@ -69,6 +70,12 @@
         flex-direction: row;
       }
     }
+
+    .logo {
+      margin-top: 2rem;
+      width: 170px; /* ширина как у кнопки */
+      max-width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -79,11 +86,12 @@
     <button id="startBtn">Start Conversation</button>
     <button id="stopBtn" disabled>Stop Conversation</button>
   </div>
+  <img src="logo.svg" alt="Logo" class="logo" />
 
   <script type="module">
     import { Conversation } from "https://esm.sh/@11labs/client";
 
-    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";
+    const API_KEY = "key";
 
     // Получаем agent_id из URL
     const urlParams = new URLSearchParams(window.location.search);
