@@ -20,6 +20,22 @@
       margin-top: 20px;
       font-weight: bold;
     }
+
+    .spinner {
+      margin: 20px auto;
+      border: 6px solid #f3f3f3;
+      border-top: 6px solid #3498db;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -39,8 +55,11 @@
         return;
       }
 
+      // Показываем спиннер
+      resultDiv.innerHTML = '<div class="spinner"></div>';
+
       const encodedUrl = encodeURIComponent(sheetUrl);
-      const webhookUrl = `https://hook.eu2.make.com/8chb12cy7p4sickibvpcp4lktlwmmxvw?survey_url=${encodedUrl}`; // ЗАМЕНИ на свой URL
+      const webhookUrl = `https://hook.eu2.make.com/8chb12cy7p4sickibvpcp4lktlwmmxvw?survey_url=${encodedUrl}`;
 
       try {
         const response = await fetch(webhookUrl, { method: "GET" });
