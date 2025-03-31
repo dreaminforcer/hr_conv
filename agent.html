@@ -10,8 +10,9 @@
   <button id="toggleBtn">Start Conversation</button>
 
   <script>
-    const AGENT_ID = "sKApodJaLWdr6Xo5mslm"; // 👉 Вставь свой agent_id
-    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";   // 👉 Вставь свой API ключ
+    const AGENT_ID = "sKApodJaLWdr6Xo5mslm"; // ← ВСТАВЬ свой agent_id
+    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";   // ← ВСТАВЬ свой API ключ
+
     const statusEl = document.getElementById("status");
     const toggleBtn = document.getElementById("toggleBtn");
 
@@ -21,106 +22,165 @@
     let isConnected = false;
 
     async function getSignedUrl() {
-      const res = await fetch(
-        `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${AGENT_ID}`,
-        {
-          method: "GET",
-          headers: {
-            "xi-api-key": API_KEY
+      console.log("[Step 1] Запрашиваем signed URL...");
+      try {
+        const res = await fetch(
+          `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${AGENT_ID}`,
+          {
+            method: "GET",
+            headers: {
+              "xi-api-key": API_KEY
+            }
           }
-        }
-      );
+        );
 
-      const data = await res.json();
-      return data.signed_url;
+        if (!res.ok) {
+          console.error("❌ Не удалось получить signed URL:", res.status, await res.text());
+          return;
+        }
+
+        const data = await res.json();
+        console.log("[Step 1] ✅ Signed URL получен:", data.signed_url);
+        return data.signed_url;
+      } catch (err) {
+        console.error("❌ Ошибка при получении signed URL:", err);
+      }
     }
 
     async function connectToAgent() {
       const signedUrl = await getSignedUrl();
+      if (!signedUrl) {
+        statusEl.textContent = "Ошибка при получении signed URL";
+        return;
+      }
+
+      console.log("[Step 2] Подключаемся к WebSocket...");
       socket = new WebSocket(signedUrl);
 
       socket.onopen = () => {
+        console.log("[Step 2] ✅ WebSocket соединение открыто.");
         statusEl.textContent = "Connected. Listening...";
-        startMicrophone();
         isConnected = true;
         toggleBtn.textContent = "Stop Conversation";
+        startMicrophone();
       };
 
-socket.onmessage = async (event) => {
-  const msg = JSON.parse(event.data);
-  console.log("Message from agent:", msg);
+      socket.onmessage = async (event) => {
+        console.log("[Step 3] 📩 Получено сообщение от агента:", event.data);
+        const msg = JSON.parse(event.data);
 
-  if (msg.message) {
-    console.log("💬 Agent text:", msg.message);
-  }
+        if (msg.message) {
+          console.log("💬 Текст от агента:", msg.message);
+        }
 
-  if (msg.audio) {
-    try {
-      const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0));
+        if (msg.audio) {
+          console.log("🔉 Получено аудио. Пробуем воспроизвести...");
 
-      const source = audioContext.createBufferSource();
-      source.buffer = decoded;
-      source.connect(audioContext.destination);
-      source.start();
-      console.log("🔊 Playing audio response.");
-    } catch (e) {
-      console.error("❌ Failed to decode or play audio:", e);
-    }
-  }
-};
+          try {
+            const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
+            audioContext.decodeAudioData(audioBuffer.slice(0), (decoded) => {
+              console.log("✅ Аудио успешно декодировано.");
+              const source = audioContext.createBufferSource();
+              source.buffer = decoded;
+              source.connect(audioContext.destination);
+              source.start();
+              console.log("🔊 Аудио воспроизведено.");
+            }, (error) => {
+              console.error("❌ Ошибка при декодировании аудио:", error);
+            });
+          } catch (e) {
+            console.error("❌ Исключение при обработке аудио:", e);
+          }
+        }
+      };
+
+      socket.onerror = (err) => {
+        console.error("❌ WebSocket ошибка:", err);
+        statusEl.textContent = "WebSocket error.";
+      };
+
+      socket.onclose = () => {
+        console.warn("⚠️ WebSocket соединение закрыто.");
+        statusEl.textContent = "Disconnected.";
+        isConnected = false;
+        toggleBtn.textContent = "Start Conversation";
+      };
     }
 
     async function startMicrophone() {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+      console.log("[Step 4] Запрашиваем доступ к микрофону...");
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("✅ Микрофон доступен.");
 
-      let audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+        let audioChunks = [];
 
-      mediaRecorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
-      };
+        mediaRecorder.ondataavailable = (event) => {
+          console.log("🎤 Получен аудио фрагмент.");
+          audioChunks.push(event.data);
+        };
 
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
-        audioChunks = [];
+        mediaRecorder.onstop = async () => {
+          console.log("⏹️ Остановка записи, отправляем аудио агенту...");
 
-        const arrayBuffer = await audioBlob.arrayBuffer();
-        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          audioChunks = [];
 
-        if (socket && socket.readyState === WebSocket.OPEN) {
-          socket.send(JSON.stringify({ audio: base64Audio }));
-        }
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-        if (isRecording) {
-          mediaRecorder.start();
-          setTimeout(() => mediaRecorder.stop(), 2000);
-        }
-      };
+          if (socket && socket.readyState === WebSocket.OPEN) {
+            console.log("📤 Отправка аудио агенту...");
+            socket.send(JSON.stringify({ audio: base64Audio }));
+          } else {
+            console.warn("⚠️ Невозможно отправить аудио: WebSocket закрыт.");
+          }
 
-      isRecording = true;
-      mediaRecorder.start();
-      setTimeout(() => mediaRecorder.stop(), 2000);
+          if (isRecording) {
+            console.log("🔁 Продолжаем запись...");
+            mediaRecorder.start();
+            setTimeout(() => mediaRecorder.stop(), 2000);
+          }
+        };
+
+        isRecording = true;
+        console.log("▶️ Запускаем первую запись...");
+        mediaRecorder.start();
+        setTimeout(() => mediaRecorder.stop(), 2000);
+      } catch (e) {
+        console.error("❌ Ошибка доступа к микрофону:", e);
+        statusEl.textContent = "Microphone error.";
+      }
     }
 
     function stopConversation() {
+      console.log("[Step 5] Остановка разговора...");
       isRecording = false;
+
       if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        console.log("⏹️ Останавливаем запись.");
         mediaRecorder.stop();
       }
+
       if (socket && socket.readyState === WebSocket.OPEN) {
+        console.log("❌ Закрываем WebSocket...");
         socket.close();
       }
+
       statusEl.textContent = "Disconnected.";
       toggleBtn.textContent = "Start Conversation";
+      isConnected = false;
     }
 
     toggleBtn.addEventListener("click", () => {
       if (!isConnected) {
+        console.log("🔄 Кнопка: Начать разговор");
         connectToAgent();
       } else {
+        console.log("🔄 Кнопка: Остановить разговор");
         stopConversation();
       }
     });
