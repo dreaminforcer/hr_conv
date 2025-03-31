@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ElevenLabs Conversational Agent</title>
+</head>
+<body>
+  <h1>🎙️ Voice Chat with ElevenLabs Agent</h1>
+  <p>Status: <span id="status">Initializing...</span></p>
+
+  <script>
+    const AGENT_ID = "sKApodJaLWdr6Xo5mslm"; // 👉 Вставь свой agent_id
+    const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";   // 👉 Вставь свой API ключ
+
+    const statusEl = document.getElementById("status");
+    let socket;
+    let mediaRecorder;
+    let isRecording = false;
+
+    async function getSignedUrl() {
+      const res = await fetch(
+        `https://api.elevenlabs.io/v1/convai/conversation/get_signed_url?agent_id=${AGENT_ID}`,
+        {
+          method: "GET",
+          headers: {
+            "xi-api-key": API_KEY
+          }
+        }
+      );
+
+      const data = await res.json();
+      return data.signed_url;
+    }
+
+    async function connectToAgent() {
+      const signedUrl = await getSignedUrl();
+      socket = new WebSocket(signedUrl);
+
+      socket.onopen = () => {
+        statusEl.textContent = "Connected. Listening...";
+        startMicrophone();
+      };
+
+      socket.onmessage = async (event) => {
+        const msg = JSON.parse(event.data);
+
+        // Текстовое сообщение от агента (опционально)
+        if (msg.message) {
+          console.log("Agent:", msg.message);
+        }
+
+        // Голосовой ответ
+        if (msg.audio) {
+          const audioBuffer = Uint8Array.from(atob(msg.audio), c => c.charCodeAt(0)).buffer;
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const decoded = await audioContext.decodeAudioData(audioBuffer.slice(0));
+          const source = audioContext.createBufferSource();
+          source.buffer = decoded;
+          source.connect(audioContext.destination);
+          source.start();
+        }
+      };
+
+      socket.onerror = (err) => {
+        console.error("WebSocket error", err);
+        statusEl.textContent = "Error connecting.";
+      };
+
+      socket.onclose = () => {
+        statusEl.textContent = "Connection closed.";
+      };
+    }
+
+    async function startMicrophone() {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream, { mimeType: "audio/webm" });
+
+      let audioChunks = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        audioChunks.push(event.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+        audioChunks = [];
+
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const base64Audio = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ audio: base64Audio }));
+        }
+
+        // Повторно запускаем запись
+        if (isRecording) {
+          mediaRecorder.start();
+          setTimeout(() => mediaRecorder.stop(), 2000); // ⏱️ сегмент по 2 секунды
+        }
+      };
+
+      // Запуск цикла записи
+      isRecording = true;
+      mediaRecorder.start();
+      setTimeout(() => mediaRecorder.stop(), 2000);
+    }
+
+    connectToAgent();
+  </script>
+</body>
+</html>
