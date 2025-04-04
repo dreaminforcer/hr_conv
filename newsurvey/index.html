@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Oxagile VHR New Survey</title>
-  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
   <style>
     body {
       margin: 0;
@@ -113,50 +113,68 @@
       width: 100%;
       max-width: 400px;
     }
+
+    .dropdown {
+      position: relative;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .dropdown-button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      text-align: left;
+    }
+
+    .dropdown-content {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      border: 1px solid #ccc;
+      border-top: none;
+      background-color: white;
+      max-height: 200px;
+      overflow-y: auto;
+      z-index: 1;
+      display: none;
+    }
+
+    .dropdown-content label {
+      margin: 0;
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+
+    .dropdown.open .dropdown-content {
+      display: block;
+    }
+
+    .selected-flags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 0.5rem;
+      max-width: 400px;
+    }
+
+    .flag {
+      font-size: 1.2rem;
+    }
   </style>
 </head>
 <body>
 
-  <!-- Language selection -->
-  <label for="agentLanguage">Agent Language ⚙️</label>
-  <select id="agentLanguage">
-    <option value="en" selected>🇺🇸 English</option>
-    <option value="ru">🇷🇺 Russian</option>
-    <option value="pl">🇵🇱 Polish</option>
-    <option value="uk">🇺🇦 Ukrainian</option>
-    <option value="de">🇩🇪 German</option>
-    <option value="fr">🇫🇷 French</option>
-  </select>
-
-  <label for="additionalLanguages">Additional Languages</label>
-  <select id="additionalLanguages" multiple size="6">
-    <option value="ru" selected>🇷🇺 Russian</option>
-    <option value="pl" selected>🇵🇱 Polish</option>
-    <option value="ar">🇦🇪 Arabic</option>
-    <option value="bg">🇧🇬 Bulgarian</option>
-    <option value="zh">🇨🇳 Chinese</option>
-    <option value="hr">🇭🇷 Croatian</option>
-    <option value="cs">🇨🇿 Czech</option>
-    <option value="da">🇩🇰 Danish</option>
-    <option value="nl">🇳🇱 Dutch</option>
-    <option value="fi">🇫🇮 Finnish</option>
-    <option value="fr">🇫🇷 French</option>
-    <option value="de">🇩🇪 German</option>
-    <option value="el">🇬🇷 Greek</option>
-    <option value="hi">🇮🇳 Hindi</option>
-    <option value="hu">🇭🇺 Hungarian</option>
-    <option value="id">🇮🇩 Indonesian</option>
-    <option value="it">🇮🇹 Italian</option>
-    <option value="ja">🇯🇵 Japanese</option>
-    <option value="ko">🇰🇷 Korean</option>
-    <option value="ms">🇲🇾 Malay</option>
-  </select>
-
-  <!-- Avatar and title -->
   <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
   <h1>🧾 Let's create a new survey VHR!</h1>
 
-  <!-- Spreadsheet URL input -->
   <input type="text" id="sheetUrl" placeholder="Insert a link to a Google Sheet" />
   <div class="template-link">
     <a href="https://docs.google.com/spreadsheets/d/1Tx9ADmu55iSQUiIozpkSMOp96LjgOqSLrU3wh_HRXpE/" target="_blank">
@@ -164,20 +182,88 @@
     </a>
   </div>
 
-  <!-- Send button -->
+  <!-- Agent language -->
+  <label for="agentLanguage">Agent Language ⚙️</label>
+  <select id="agentLanguage">
+    <option value="en">🇺🇸 English</option>
+    <option value="ru">🇷🇺 Russian</option>
+    <option value="pl">🇵🇱 Polish</option>
+    <option value="be">🇧🇾 Belarusian</option>
+    <option value="uk">🇺🇦 Ukrainian</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="fr">🇫🇷 French</option>
+    <option value="nl">🇳🇱 Dutch</option>
+    <option value="it">🇮🇹 Italian</option>
+    <option value="he">🇮🇱 Hebrew</option>
+    <option value="yi">🕍 Yiddish</option>
+  </select>
+
+  <!-- Additional languages dropdown -->
+  <label>Additional Languages</label>
+  <div class="dropdown" id="languageDropdown">
+    <div class="dropdown-button" onclick="toggleDropdown()">Select languages...</div>
+    <div class="dropdown-content" id="languageOptions">
+      <!-- Checkboxes will be inserted here -->
+    </div>
+  </div>
+  <div class="selected-flags" id="selectedFlags"></div>
+
   <button onclick="sendToWebhook()">Send</button>
-
-  <!-- Result display -->
   <div id="result"></div>
-
-  <!-- Logo -->
   <img src="../logo.svg" alt="Logo" class="logo" />
 
   <script>
-    async function sendToWebhook() {
+    const languages = [
+      { value: "en", label: "🇺🇸 English" },
+      { value: "ru", label: "🇷🇺 Russian" },
+      { value: "pl", label: "🇵🇱 Polish" },
+      { value: "be", label: "🇧🇾 Belarusian" },
+      { value: "uk", label: "🇺🇦 Ukrainian" },
+      { value: "de", label: "🇩🇪 German" },
+      { value: "fr", label: "🇫🇷 French" },
+      { value: "nl", label: "🇳🇱 Dutch" },
+      { value: "it", label: "🇮🇹 Italian" },
+      { value: "he", label: "🇮🇱 Hebrew" },
+      { value: "yi", label: "🕍 Yiddish" }
+    ];
+
+    const dropdown = document.getElementById("languageDropdown");
+    const optionsContainer = document.getElementById("languageOptions");
+    const selectedFlags = document.getElementById("selectedFlags");
+    const agentSelect = document.getElementById("agentLanguage");
+
+    function toggleDropdown() {
+      dropdown.classList.toggle("open");
+    }
+
+    function saveToLocalStorage() {
+      const selectedLangs = getSelectedAdditionalLanguages();
+      localStorage.setItem("agentLanguage", agentSelect.value);
+      localStorage.setItem("additionalLanguages", JSON.stringify(selectedLangs));
+    }
+
+    function getSelectedAdditionalLanguages() {
+      return Array.from(document.querySelectorAll("input[name='langs']:checked")).map(cb => cb.value);
+    }
+
+    function renderFlags() {
+      selectedFlags.innerHTML = "";
+      const selected = getSelectedAdditionalLanguages();
+      selected.forEach(lang => {
+        const langData = languages.find(l => l.value === lang);
+        if (langData) {
+          const span = document.createElement("span");
+          span.className = "flag";
+          span.textContent = langData.label.split(" ")[0];
+          selectedFlags.appendChild(span);
+        }
+      });
+    }
+
+    function sendToWebhook() {
       const sheetUrl = document.getElementById("sheetUrl").value.trim();
-      const agentLang = document.getElementById("agentLanguage").value;
-      const additionalLangsSelect = document.getElementById("additionalLanguages");
+      const agentLang = agentSelect.value;
+      const additionalLangs = getSelectedAdditionalLanguages().join(",");
       const resultDiv = document.getElementById("result");
 
       if (!sheetUrl) {
@@ -185,29 +271,54 @@
         return;
       }
 
-      const additionalLangs = Array.from(additionalLangsSelect.selectedOptions)
-        .map(option => option.value)
-        .join(",");
-
+      saveToLocalStorage();
+      renderFlags();
       resultDiv.innerHTML = '<div class="spinner"></div>';
 
       const encodedUrl = encodeURIComponent(sheetUrl);
       const webhookUrl = `https://hook.eu2.make.com/8chb12cy7p4sickibvpcp4lktlwmmxvw?survey_url=${encodedUrl}&agent_lang=${agentLang}&additional_langs=${encodeURIComponent(additionalLangs)}`;
 
-      try {
-        const response = await fetch(webhookUrl, { method: "GET" });
-
-        if (!response.ok) {
-          throw new Error("Ошибка ответа от вебхука");
-        }
-
-        const resultUrl = await response.text();
-        resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">${resultUrl}</a>`;
-      } catch (error) {
-        console.error(error);
-        resultDiv.innerText = "🚫 Error processing request.";
-      }
+      fetch(webhookUrl)
+        .then(response => {
+          if (!response.ok) throw new Error("Ошибка ответа от вебхука");
+          return response.text();
+        })
+        .then(resultUrl => {
+          resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">${resultUrl}</a>`;
+        })
+        .catch(error => {
+          console.error(error);
+          resultDiv.innerText = "🚫 Error processing request.";
+        });
     }
+
+    // Populate checkboxes and restore saved state
+    window.addEventListener("DOMContentLoaded", () => {
+      languages.forEach(lang => {
+        const label = document.createElement("label");
+        label.innerHTML = `<input type="checkbox" name="langs" value="${lang.value}"> ${lang.label}`;
+        optionsContainer.appendChild(label);
+      });
+
+      // Restore from localStorage
+      const savedAgent = localStorage.getItem("agentLanguage");
+      if (savedAgent) agentSelect.value = savedAgent;
+
+      const savedAdditional = JSON.parse(localStorage.getItem("additionalLanguages") || "[]");
+      savedAdditional.forEach(val => {
+        const cb = optionsContainer.querySelector(`input[value="${val}"]`);
+        if (cb) cb.checked = true;
+      });
+
+      renderFlags();
+
+      optionsContainer.addEventListener("change", () => {
+        renderFlags();
+        saveToLocalStorage();
+      });
+
+      agentSelect.addEventListener("change", saveToLocalStorage);
+    });
   </script>
 </body>
 </html>
