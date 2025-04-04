@@ -33,7 +33,7 @@
       margin-bottom: 1rem;
     }
 
-    input, button {
+    input, button, select {
       padding: 0.75rem 1rem;
       font-size: 1rem;
       border-radius: 8px;
@@ -105,24 +105,79 @@
     .template-link a:hover {
       text-decoration: underline;
     }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 0.75rem 0 0.25rem;
+      width: 100%;
+      max-width: 400px;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Language selection -->
+  <label for="agentLanguage">Agent Language ⚙️</label>
+  <select id="agentLanguage">
+    <option value="en" selected>🇺🇸 English</option>
+    <option value="ru">🇷🇺 Russian</option>
+    <option value="pl">🇵🇱 Polish</option>
+    <option value="uk">🇺🇦 Ukrainian</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="fr">🇫🇷 French</option>
+  </select>
+
+  <label for="additionalLanguages">Additional Languages</label>
+  <select id="additionalLanguages" multiple size="6">
+    <option value="ru" selected>🇷🇺 Russian</option>
+    <option value="pl" selected>🇵🇱 Polish</option>
+    <option value="ar">🇦🇪 Arabic</option>
+    <option value="bg">🇧🇬 Bulgarian</option>
+    <option value="zh">🇨🇳 Chinese</option>
+    <option value="hr">🇭🇷 Croatian</option>
+    <option value="cs">🇨🇿 Czech</option>
+    <option value="da">🇩🇰 Danish</option>
+    <option value="nl">🇳🇱 Dutch</option>
+    <option value="fi">🇫🇮 Finnish</option>
+    <option value="fr">🇫🇷 French</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="el">🇬🇷 Greek</option>
+    <option value="hi">🇮🇳 Hindi</option>
+    <option value="hu">🇭🇺 Hungarian</option>
+    <option value="id">🇮🇩 Indonesian</option>
+    <option value="it">🇮🇹 Italian</option>
+    <option value="ja">🇯🇵 Japanese</option>
+    <option value="ko">🇰🇷 Korean</option>
+    <option value="ms">🇲🇾 Malay</option>
+  </select>
+
+  <!-- Avatar and title -->
   <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
   <h1>🧾 Let's create a new survey VHR!</h1>
+
+  <!-- Spreadsheet URL input -->
   <input type="text" id="sheetUrl" placeholder="Insert a link to a Google Sheet" />
   <div class="template-link">
     <a href="https://docs.google.com/spreadsheets/d/1Tx9ADmu55iSQUiIozpkSMOp96LjgOqSLrU3wh_HRXpE/" target="_blank">
       Use the questions spreadsheet template
     </a>
   </div>
+
+  <!-- Send button -->
   <button onclick="sendToWebhook()">Send</button>
+
+  <!-- Result display -->
   <div id="result"></div>
+
+  <!-- Logo -->
   <img src="../logo.svg" alt="Logo" class="logo" />
 
   <script>
     async function sendToWebhook() {
       const sheetUrl = document.getElementById("sheetUrl").value.trim();
+      const agentLang = document.getElementById("agentLanguage").value;
+      const additionalLangsSelect = document.getElementById("additionalLanguages");
       const resultDiv = document.getElementById("result");
 
       if (!sheetUrl) {
@@ -130,10 +185,14 @@
         return;
       }
 
+      const additionalLangs = Array.from(additionalLangsSelect.selectedOptions)
+        .map(option => option.value)
+        .join(",");
+
       resultDiv.innerHTML = '<div class="spinner"></div>';
 
       const encodedUrl = encodeURIComponent(sheetUrl);
-      const webhookUrl = `https://hook.eu2.make.com/8chb12cy7p4sickibvpcp4lktlwmmxvw?survey_url=${encodedUrl}`;
+      const webhookUrl = `https://hook.eu2.make.com/8chb12cy7p4sickibvpcp4lktlwmmxvw?survey_url=${encodedUrl}&agent_lang=${agentLang}&additional_langs=${encodeURIComponent(additionalLangs)}`;
 
       try {
         const response = await fetch(webhookUrl, { method: "GET" });
