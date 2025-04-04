@@ -117,6 +117,20 @@
 </head>
 <body>
 
+
+
+  <!-- Avatar and title -->
+  <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
+  <h1>🧾 Let's create a new survey VHR!</h1>
+
+  <!-- Spreadsheet URL input -->
+  <input type="text" id="sheetUrl" placeholder="Insert a link to a Google Sheet" />
+  <div class="template-link">
+    <a href="https://docs.google.com/spreadsheets/d/1Tx9ADmu55iSQUiIozpkSMOp96LjgOqSLrU3wh_HRXpE/" target="_blank">
+      Use the questions spreadsheet template
+    </a>
+  </div>
+
   <!-- Language selection -->
   <label for="agentLanguage">Agent Language ⚙️</label>
   <select id="agentLanguage">
@@ -151,19 +165,7 @@
     <option value="ko">🇰🇷 Korean</option>
     <option value="ms">🇲🇾 Malay</option>
   </select>
-
-  <!-- Avatar and title -->
-  <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
-  <h1>🧾 Let's create a new survey VHR!</h1>
-
-  <!-- Spreadsheet URL input -->
-  <input type="text" id="sheetUrl" placeholder="Insert a link to a Google Sheet" />
-  <div class="template-link">
-    <a href="https://docs.google.com/spreadsheets/d/1Tx9ADmu55iSQUiIozpkSMOp96LjgOqSLrU3wh_HRXpE/" target="_blank">
-      Use the questions spreadsheet template
-    </a>
-  </div>
-
+  
   <!-- Send button -->
   <button onclick="sendToWebhook()">Send</button>
 
