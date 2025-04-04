@@ -136,35 +136,24 @@
   <select id="agentLanguage">
     <option value="en" selected>🇺🇸 English</option>
     <option value="ru">🇷🇺 Russian</option>
+    <option value="nl">🇳🇱 Dutch</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="fr">🇫🇷 French</option>
+    <option value="it">🇮🇹 Italian</option>
     <option value="pl">🇵🇱 Polish</option>
     <option value="uk">🇺🇦 Ukrainian</option>
-    <option value="de">🇩🇪 German</option>
-    <option value="fr">🇫🇷 French</option>
   </select>
 
-  <label for="additionalLanguages">Additional Languages</label>
-  <select id="additionalLanguages" multiple size="6">
-    <option value="ru" selected>🇷🇺 Russian</option>
-    <option value="pl" selected>🇵🇱 Polish</option>
-    <option value="ar">🇦🇪 Arabic</option>
-    <option value="bg">🇧🇬 Bulgarian</option>
-    <option value="zh">🇨🇳 Chinese</option>
-    <option value="hr">🇭🇷 Croatian</option>
-    <option value="cs">🇨🇿 Czech</option>
-    <option value="da">🇩🇰 Danish</option>
-    <option value="nl">🇳🇱 Dutch</option>
-    <option value="fi">🇫🇮 Finnish</option>
-    <option value="fr">🇫🇷 French</option>
-    <option value="de">🇩🇪 German</option>
-    <option value="el">🇬🇷 Greek</option>
-    <option value="hi">🇮🇳 Hindi</option>
-    <option value="hu">🇭🇺 Hungarian</option>
-    <option value="id">🇮🇩 Indonesian</option>
-    <option value="it">🇮🇹 Italian</option>
-    <option value="ja">🇯🇵 Japanese</option>
-    <option value="ko">🇰🇷 Korean</option>
-    <option value="ms">🇲🇾 Malay</option>
-  </select>
+<select id="additionalLanguages" multiple size="3">
+  <option value="en">🇺🇸 English</option>
+  <option value="ru" selected>🇷🇺 Russian</option>
+  <option value="nl">🇳🇱 Dutch</option>
+  <option value="de">🇩🇪 German</option>
+  <option value="fr">🇫🇷 French</option>
+  <option value="it">🇮🇹 Italian</option>
+  <option value="pl" selected>🇵🇱 Polish</option>
+  <option value="uk">🇺🇦 Ukrainian</option>
+</select>
   
   <!-- Send button -->
   <button onclick="sendToWebhook()">Send</button>
