@@ -195,7 +195,7 @@
         }
 
         const resultUrl = await response.text();
-        resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">${resultUrl}</a>`;
+        resultDiv.innerHTML = `🔗 <a href="${resultUrl}" target="_blank">Click to answer the survey</a>`;
       } catch (error) {
         console.error(error);
         resultDiv.innerText = "🚫 Error processing request.";
