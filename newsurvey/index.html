@@ -117,8 +117,6 @@
 </head>
 <body>
 
-
-
   <!-- Avatar and title -->
   <div class="agent-avatar" style="background-image: url('hr.webp');"></div>
   <h1>🧾 Let's create a new survey VHR!</h1>
@@ -128,6 +126,11 @@
   <div class="template-link">
     <a href="https://docs.google.com/spreadsheets/d/1Tx9ADmu55iSQUiIozpkSMOp96LjgOqSLrU3wh_HRXpE/" target="_blank">
       Use the questions spreadsheet template
+    </a>
+  </div>
+  <div class="template-link">
+    <a href="https://dreaminforcer.github.io/hr_conv/helper/" target="_blank">
+      Or use our magic survey creator
     </a>
   </div>
 
@@ -144,15 +147,15 @@
     <option value="uk">🇺🇦 Ukrainian</option>
   </select>
 
-<select id="additionalLanguages" multiple size="7">
-  <option value="ru" selected>🇷🇺 Russian</option>
-  <option value="nl">🇳🇱 Dutch</option>
-  <option value="de">🇩🇪 German</option>
-  <option value="fr">🇫🇷 French</option>
-  <option value="it">🇮🇹 Italian</option>
-  <option value="pl" selected>🇵🇱 Polish</option>
-  <option value="uk">🇺🇦 Ukrainian</option>
-</select>
+  <select id="additionalLanguages" multiple size="7">
+    <option value="ru" selected>🇷🇺 Russian</option>
+    <option value="nl">🇳🇱 Dutch</option>
+    <option value="de">🇩🇪 German</option>
+    <option value="fr">🇫🇷 French</option>
+    <option value="it">🇮🇹 Italian</option>
+    <option value="pl" selected>🇵🇱 Polish</option>
+    <option value="uk">🇺🇦 Ukrainian</option>
+  </select>
   
   <!-- Send button -->
   <button onclick="sendToWebhook()">Send</button>
@@ -188,7 +191,7 @@
         const response = await fetch(webhookUrl, { method: "GET" });
 
         if (!response.ok) {
-          throw new Error("Ошибка ответа от вебхука");
+          throw new Error("Webhook response error");
         }
 
         const resultUrl = await response.text();
