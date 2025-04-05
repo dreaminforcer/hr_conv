@@ -198,7 +198,7 @@
           signedUrl,
           onConnect: (conversationId) => {
             console.log("Connected with ID:", conversationId);
-            currentConversationId = conversationId;
+            currentConversationId = conversationId.conversationId;
             sessionEnded = false;
             statusEl.textContent = "Connected";
             stopBtn.disabled = false;
