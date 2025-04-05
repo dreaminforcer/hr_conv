@@ -33,6 +33,12 @@
       margin-bottom: 1rem;
     }
 
+    #supportedLanguages {
+      margin-bottom: 1rem;
+      text-align: center;
+      font-size: 1.1rem;
+    }
+
     p {
       font-size: 1rem;
       margin-bottom: 1.5rem;
@@ -73,13 +79,14 @@
 
     .logo {
       margin-top: 2rem;
-      width: 170px; /* ширина как у кнопки */
+      width: 170px;
       max-width: 100%;
     }
   </style>
 </head>
 <body>
   <div class="agent-avatar" id="agentAvatar" style="background-image: url('hr.webp');"></div>
+  <div id="supportedLanguages"></div>
   <h1>🎙️ Oxagile Virtual HR</h1>
   <p>Status: <span id="status">Not connected</span></p>
   <div id="controls">
@@ -93,13 +100,44 @@
 
     const API_KEY = "sk_390b4884aebd3805236761ad470dda7bc5fe8a57fba0c96e";
 
-    // Получаем agent_id из URL
     const urlParams = new URLSearchParams(window.location.search);
     const AGENT_ID = urlParams.get("agent_id");
 
     if (!AGENT_ID) {
       alert("agent_id is required in the URL, e.g., ?agent_id=abc123");
       throw new Error("Missing agent_id in URL");
+    }
+
+    const agentLang = urlParams.get("agent_lang");
+    const additionalLangs = urlParams.get("additional_langs");
+
+    const langContainer = document.getElementById("supportedLanguages");
+
+    const getFlagEmoji = (langCode) => {
+      const countryCode = (langCode || "").slice(0, 2).toUpperCase();
+      const OFFSET = 127397;
+      return countryCode.replace(/./g, char =>
+        String.fromCodePoint(char.charCodeAt(0) + OFFSET)
+      );
+    };
+
+    const formatLang = (code) => {
+      const clean = code.trim().toLowerCase();
+      return `${getFlagEmoji(clean)} ${clean.toUpperCase()}`;
+    };
+
+    const allLangs = [];
+
+    if (agentLang) allLangs.push(formatLang(agentLang));
+    if (additionalLangs) {
+      additionalLangs.split(",")
+        .map(code => code.trim())
+        .filter(Boolean)
+        .forEach(code => allLangs.push(formatLang(code)));
+    }
+
+    if (allLangs.length > 0) {
+      langContainer.innerHTML = allLangs.join(", ");
     }
 
     let conversation;
