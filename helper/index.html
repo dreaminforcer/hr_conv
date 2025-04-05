@@ -167,10 +167,10 @@
           console.log("Received URL:", url);
           resultLink.innerHTML = `<a href="${url}" target="_blank">${url}</a>`;
         } else {
-          resultLink.textContent = "Ошибка получения ссылки";
+          resultLink.textContent = "Error getting link";
         }
       } catch (err) {
-        resultLink.textContent = "Ошибка при получении результата";
+        resultLink.textContent = "Error getting link";
         console.error(err);
       } finally {
         loader.style.display = "none";
