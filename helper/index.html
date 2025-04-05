@@ -127,11 +127,6 @@
 
     const AGENT_ID = "XgnIrmfGMT55ISQTB7f";
 
-    if (!AGENT_ID) {
-      alert("agent_id is required in the URL, e.g., ?agent_id=abc123");
-      throw new Error("Missing agent_id in URL");
-    }
-
     let conversation;
     let currentConversationId = null;
     let sessionEnded = false;
